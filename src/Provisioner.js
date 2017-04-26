@@ -5,9 +5,12 @@ import RateLimitedDecrement from './utils/RateLimitedDecrement';
 import Throughput from './utils/Throughput';
 import ProvisionerLogging from './provisioning/ProvisionerLogging';
 import { Region } from './configuration/Region';
-import DefaultProvisioner from './configuration/DefaultProvisioner';
+import FixedProvisioner from './configuration/FixedProvisioner';
 import { invariant } from './Global';
 import type { TableProvisionedAndConsumedThroughput, ProvisionerConfig, AdjustmentContext } from './flow/FlowTypes';
+import bossTableConfig from './configuration/BossTableConfig';
+import provisionerMap from './configuration/BossProvisioners';
+import { log } from './Global';
 
 export default class Provisioner extends ProvisionerConfigurableBase {
 
@@ -20,10 +23,12 @@ export default class Provisioner extends ProvisionerConfigurableBase {
   async getTableNamesAsync(): Promise<string[]> {
 
     // Option 1 - All tables (Default)
-    return await this.db.listAllTableNamesAsync();
+    // return await this.db.listAllTableNamesAsync();
 
     // Option 2 - Hardcoded list of tables
     // return ['Table1', 'Table2', 'Table3'];
+    let tables = Object.keys(bossTableConfig);
+    return tables;
 
     // Option 3 - DynamoDB / S3 configured list of tables
     // return await ...;
@@ -34,10 +39,22 @@ export default class Provisioner extends ProvisionerConfigurableBase {
   getTableConfig(data: TableProvisionedAndConsumedThroughput): ProvisionerConfig {
 
     // Option 1 - Default settings for all tables
-    return DefaultProvisioner;
+    // return DefaultProvisioner;
 
     // Option 2 - Bespoke table specific settings
     // return data.TableName === 'Table1' ? Climbing : Default;
+    if(bossTableConfig.hasOwnProperty(data.TableName)) {
+      let config = bossTableConfig[data.TableName];
+      if(!provisionerMap.hasOwnProperty(config)) {
+        log('WARNING: table: ' + data.TableName + ' specified unknown config: ' + config);
+        return FixedProvisioner;
+      }
+      return provisionerMap[config];
+    }
+
+    log('WARNING: No config found for table: ' + data.TableName);
+    return FixedProvisioner;
+
 
     // Option 3 - DynamoDB / S3 sourced table specific settings
     // return await ...;
