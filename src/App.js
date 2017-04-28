@@ -7,6 +7,8 @@ import CapacityCalculator from './CapacityCalculator';
 import { json, stats, log, invariant } from './Global';
 import type { UpdateTableRequest } from 'aws-sdk';
 
+const https = require('https');
+
 export default class App {
   _provisioner: Provisioner;
   _capacityCalculator: CapacityCalculator;
@@ -45,7 +47,33 @@ export default class App {
     }
 
     sw.end();
-    this._logMetrics(tableDetails);
+
+    let metricStr = this._logMetrics(tableDetails);
+
+    // Send updates to Slack
+    if(tableUpdateRequests.length > 0) {
+      let msg = JSON.stringify(
+        { 'text': metricStr, 'channel': process.env.SLACK_CHANNEL },
+        null, json.padding);
+
+      let options = {
+        hostname: process.env.SLACK_WEBHOOK_HOST,
+        port: 443,
+        path: process.env.SLACK_WEBHOOK_PATH,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(msg)
+        }
+      };
+
+      let req = https.request(options, (res) => {});
+      req.on('error', (e) => {
+          log("Error POST'ing to Slack: " + e.message);
+      });
+      req.write(msg);
+      req.end();
+    }
 
     // Return an empty response
     if (context) {
@@ -135,7 +163,7 @@ export default class App {
       .map(({tableUpdateRequest}) => tableUpdateRequest);
   }
 
-  _logMetrics(tableDetails: Object[]) {
+  _logMetrics(tableDetails: Object[]): string {
     invariant(tableDetails instanceof Array,
       'The argument \'tableDetails\' was not an array');
 
@@ -182,7 +210,7 @@ export default class App {
     let tableUpdates = updateRequests != null ? { count: updateRequests.length } :
       undefined;
 
-    log(JSON.stringify({
+    let jsonMsg = JSON.stringify({
       'Index.handler': indexHandler,
       'DynamoDB.listTablesAsync': dynamoDBListTablesAsync,
       'DynamoDB.describeTableAsync': dynamoDBDescribeTableAsync,
@@ -191,6 +219,10 @@ export default class App {
       TableUpdates: tableUpdates,
       TotalProvisionedThroughput: totalProvisionedThroughput,
       TotalMonthlyEstimatedCost: totalMonthlyEstimatedCost,
-    }, null, json.padding));
+    }, null, json.padding);
+
+    log(jsonMsg);
+
+    return jsonMsg;
   }
 }
