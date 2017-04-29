@@ -52,9 +52,7 @@ export default class App {
 
     // Send updates to Slack
     if(tableUpdateRequests.length > 0) {
-      let msg = JSON.stringify(
-        { 'text': metricStr, 'channel': process.env.SLACK_CHANNEL },
-        null, json.padding);
+      let msg = JSON.stringify({'text': metricStr}, null, json.padding);
 
       let options = {
         hostname: process.env.SLACK_WEBHOOK_HOST,
