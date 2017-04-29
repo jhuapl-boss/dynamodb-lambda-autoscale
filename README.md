@@ -1,5 +1,52 @@
 # dynamodb-lambda-autoscale
-**Autoscale AWS DynamoDB using an AWS Lambda function**
+
+## Boss Specific Files
+
+This node project has been adapted specifically for the Boss datastore. Boss
+table specific auto-scale strategies are placed in the following two files.
+
+### ./configuration/BossTableConfig.json
+
+This file maps DynamoDB table names to specific auto-scaling configurations in
+BossProvisioners.json.  Example JSON:
+
+```javascript
+{
+    "table1": "strategy2",
+    "table2": "strategy1",
+    "table3": "strategy2"
+}
+```
+
+### ./configuration/BossProvisioners.json
+
+This file describes all the auto-scaling strategies available.  The strategy
+object used in the example is defined [below](#Strategy-Settings). Example
+JSON:
+
+```javascript
+{
+    "strategy1": { strategy_object },
+    "strategy2": { strategy_object },
+    .
+    .
+    "strategyn": { strategy_object }
+}
+```
+
+## Slack integration
+
+Table update notifications are published to Slack.  Slack settings are taken
+from the following environment variables:
+
+* SLACK_WEBHOOK_HOST - host name of the webhook's URL such as hooks.slack.com
+* SLACK_WEBHOOK_PATH - request path
+
+For lambda deployment automation, using environment variables may not be the
+best solution.  Also consider using an additional JSON file, stored external
+to the repo.
+
+## Autoscale AWS DynamoDB using an AWS Lambda function
 
 + 5 minute setup process
 + Serverless design
@@ -84,7 +131,7 @@ configuration.  Please see the respective websites for advantages / reasons.
 3. Create a AWS Lambda function
   1. Skip the pre defined functions step
   2. Set the name to 'DynamoDBLambdaAutoscale'
-  3. Set the runtime to 'Node.js 4.3'
+  3. Set the runtime to 'Node.js 6.x'
   4. Select upload a zip file and select 'dist.zip' which you created earlier
   5. Set the handler to 'index.handler'
   6. Set the Role to 'DynamoDBLambdaAutoscale'
