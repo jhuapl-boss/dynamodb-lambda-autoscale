@@ -8,7 +8,8 @@ table specific auto-scale strategies are placed in the following two files.
 ### ./configuration/BossTableConfig.json
 
 This file maps DynamoDB table names to specific auto-scaling configurations in
-BossProvisioners.json.  Example JSON:
+BossProvisioners.json.  During deployment, the table names should be
+auto-generated according to the stack used.  Example JSON:
 
 ```javascript
 {
