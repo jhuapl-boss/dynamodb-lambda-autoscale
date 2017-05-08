@@ -43,9 +43,15 @@ from the following environment variables:
 * SLACK_WEBHOOK_HOST - host name of the webhook's URL such as hooks.slack.com
 * SLACK_WEBHOOK_PATH - request path
 
-For lambda deployment automation, using environment variables may not be the
-best solution.  Also consider using an additional JSON file, stored external
-to the repo.
+Set these values in `config.env.production` in the root of the repo.
+
+    ```javascript
+    SLACK_WEBHOOK_HOST = "hooks.slack.com
+    SLACK_WEBHOOK_PATH = "/services/###############/##############"
+    ```
+
+During initialization, the contents of this file will automatically be loaded
+into the environment.
 
 ## Autoscale AWS DynamoDB using an AWS Lambda function
 
