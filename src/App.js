@@ -16,6 +16,25 @@ export default class App {
   constructor() {
     this._provisioner = new Provisioner();
     this._capacityCalculator = new CapacityCalculator();
+    this._checkEnvVariables();
+  }
+
+  // These environment variables are required.
+  _checkEnvVariables() {
+    if(!('VPC_DOMAIN' in process.env)) {
+      log('Error: VPC_DOMAIN environment variable not set.');
+      throw(new Error('VPC_DOMAIN environment variable not set.'));
+    }
+
+    if(!('SLACK_WEBHOOK_HOST' in process.env)) {
+      log('Error: SLACK_WEBHOOK_HOST environment variable not set.');
+      throw(new Error('SLACK_WEBHOOK_HOST environment variable not set.'));
+    }
+
+    if(!('SLACK_WEBHOOK_PATH' in process.env)) {
+      log('Error: SLACK_WEBHOOK_PATH environment variable not set.');
+      throw(new Error('SLACK_WEBHOOK_PATH environment variable not set.'));
+    }
   }
 
   async runAsync(event: any, context: any): Promise<void> {

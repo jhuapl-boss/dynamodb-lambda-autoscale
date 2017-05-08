@@ -8,11 +8,30 @@ import { Region } from './configuration/Region';
 import FixedProvisioner from './configuration/FixedProvisioner';
 import { invariant } from './Global';
 import type { TableProvisionedAndConsumedThroughput, ProvisionerConfig, AdjustmentContext } from './flow/FlowTypes';
-import bossTableConfig from './configuration/BossTableConfig';
+import bossTableConfigRaw from './configuration/BossTableConfig';
 import provisionerMap from './configuration/BossProvisioners';
 import { log } from './Global';
 
 export default class Provisioner extends ProvisionerConfigurableBase {
+  _bossTableConfig: Object;
+
+  constructor() {
+    super();
+
+    // Append domain name to each table name from BossTableConfig.json.  This
+    // will fully name each DynamoDB table.
+    this._bossTableConfig = ((rawCfg) => {
+      let tableCfg = {};
+      Object.keys(rawCfg).forEach((key) => {
+        // App class will throw an exception during construction if VPC_DOMAIN
+        // env // variable not set.  Tell Flow not to type check VPC_DOMAIN.
+        // $FlowIgnore
+        let fullTableName = key + '.' + process.env.VPC_DOMAIN;
+        tableCfg[fullTableName] = rawCfg[key];
+      });
+      return tableCfg;
+    })(bossTableConfigRaw);
+  }
 
   // Get the region
   getDynamoDBRegion(): string {
@@ -27,7 +46,7 @@ export default class Provisioner extends ProvisionerConfigurableBase {
 
     // Option 2 - Hardcoded list of tables
     // return ['Table1', 'Table2', 'Table3'];
-    let tables = Object.keys(bossTableConfig);
+    let tables = Object.keys(this._bossTableConfig);
     return tables;
 
     // Option 3 - DynamoDB / S3 configured list of tables
@@ -43,8 +62,8 @@ export default class Provisioner extends ProvisionerConfigurableBase {
 
     // Option 2 - Bespoke table specific settings
     // return data.TableName === 'Table1' ? Climbing : Default;
-    if(bossTableConfig.hasOwnProperty(data.TableName)) {
-      let config = bossTableConfig[data.TableName];
+    if(this._bossTableConfig.hasOwnProperty(data.TableName)) {
+      let config = this._bossTableConfig[data.TableName];
       if(!provisionerMap.hasOwnProperty(config)) {
         log('WARNING: table: ' + data.TableName + ' specified unknown config: ' + config);
         return FixedProvisioner;

@@ -8,16 +8,24 @@ table specific auto-scale strategies are placed in the following two files.
 ### ./configuration/BossTableConfig.json
 
 This file maps DynamoDB table names to specific auto-scaling configurations in
-BossProvisioners.json.  During deployment, the table names should be
-auto-generated according to the stack used.  Example JSON:
+BossProvisioners.json.  **DO NOT** use the full name of the table.  Only use 
+the first part of the table's name such as `bossmeta`.  At runtime, the domain
+name will be appended to each table's name so that the table is properly named.
+Example JSON:
 
-```javascript
-{
-    "table1": "strategy2",
-    "table2": "strategy1",
-    "table3": "strategy2"
-}
-```
+    ```javascript
+    {
+        "bossmeta": "strategy2",
+        "s3index": "strategy1",
+        "tileindex": "strategy2"
+    }
+    ```
+
+In `config.env.production` in the root of the repo, set the domain name:
+
+    ```javascript
+    VPC_DOMAIN = "production.boss"
+    ```
 
 ### ./configuration/BossProvisioners.json
 
@@ -25,15 +33,15 @@ This file describes all the auto-scaling strategies available.  The strategy
 object used in the example is defined [below](#Strategy-Settings). Example
 JSON:
 
-```javascript
-{
-    "strategy1": { strategy_object },
-    "strategy2": { strategy_object },
-    .
-    .
-    "strategyn": { strategy_object }
-}
-```
+    ```javascript
+    {
+        "strategy1": { strategy_object },
+        "strategy2": { strategy_object },
+        .
+        .
+        "strategyn": { strategy_object }
+    }
+    ```
 
 ## Slack integration
 
