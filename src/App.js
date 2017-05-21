@@ -71,7 +71,8 @@ export default class App {
 
     // Send updates to Slack
     if(tableUpdateRequests.length > 0) {
-      let msg = JSON.stringify({'text': metricStr}, null, json.padding);
+      // $FlowIgnore
+      let msg = JSON.stringify({'text': process.env.VPC_DOMAIN + ':\n' + metricStr}, null, json.padding);
 
       let options = {
         hostname: process.env.SLACK_WEBHOOK_HOST,
