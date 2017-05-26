@@ -1,7 +1,7 @@
 {
-    "bossmeta": "default",
-    "idCount": "default",
-    "idIndex": "default",
-    "s3index": "default",
-    "tileindex": "default"
+    "bossmeta": "bossmeta_cfg",
+    "idCount": "idCount_cfg",
+    "idIndex": "idIndex_cfg",
+    "s3index": "s3index_cfg",
+    "tileindex": "tileindex_cfg"
 }
