@@ -179,7 +179,12 @@ A breakdown of the configuration behaviour is as follows:
 ## Strategy Settings
 
 The strategy settings described above uses a simple schema which applies to both Read/Write and to
-both the Increment/Decrement.  Using the options below many different strategies can be constructed:
+both the Increment/Decrement.  For an Increment, if more than one option is 
+specified, the maximum of the specified options is used.  For a Decrement, the
+minimum of the specified options is used.  The Increment/Decrement is bounded
+by the Max/Min, respectively.  See the example, in the [Configuration](#configuration) 
+section, for a more concrete illustration of how the different options work 
+together.  Using the options below many different strategies can be constructed:
 - ReadCapacity.Min : (Optional) Define a minimum allowed capacity, otherwise 1
 - ReadCapacity.Max : (Optional) Define a maximum allowed capacity, otherwise unlimited
 - ReadCapacity.Increment : (Optional) Defined an increment strategy
