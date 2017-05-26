@@ -1,5 +1,67 @@
 # dynamodb-lambda-autoscale
-**Autoscale AWS DynamoDB using an AWS Lambda function**
+
+## Boss Specific Files
+
+This node project has been adapted specifically for the Boss datastore. Boss
+table specific auto-scale strategies are placed in the following two files.
+
+### ./configuration/BossTableConfig.json
+
+This file maps DynamoDB table names to specific auto-scaling configurations in
+BossProvisioners.json.  **DO NOT** use the full name of the table.  Only use 
+the first part of the table's name such as `bossmeta`.  At runtime, the domain
+name will be appended to each table's name so that the table is properly named.
+Example JSON:
+
+    ```javascript
+    {
+        "bossmeta": "strategy2",
+        "s3index": "strategy1",
+        "tileindex": "strategy2"
+    }
+    ```
+
+In `config.env.production` in the root of the repo, set the domain name:
+
+    ```javascript
+    VPC_DOMAIN = "production.boss"
+    ```
+
+### ./configuration/BossProvisioners.json
+
+This file describes all the auto-scaling strategies available.  The strategy
+object used in the example is defined [below](#Strategy-Settings). Example
+JSON:
+
+    ```javascript
+    {
+        "strategy1": { strategy_object },
+        "strategy2": { strategy_object },
+        .
+        .
+        "strategyn": { strategy_object }
+    }
+    ```
+
+## Slack integration
+
+Table update notifications are published to Slack.  Slack settings are taken
+from the following environment variables:
+
+* SLACK_WEBHOOK_HOST - host name of the webhook's URL such as hooks.slack.com
+* SLACK_WEBHOOK_PATH - request path
+
+Set these values in `config.env.production` in the root of the repo.
+
+    ```javascript
+    SLACK_WEBHOOK_HOST = "hooks.slack.com
+    SLACK_WEBHOOK_PATH = "/services/###############/##############"
+    ```
+
+During initialization, the contents of this file will automatically be loaded
+into the environment.
+
+## Autoscale AWS DynamoDB using an AWS Lambda function
 
 + 5 minute setup process
 + Serverless design
@@ -84,7 +146,7 @@ configuration.  Please see the respective websites for advantages / reasons.
 3. Create a AWS Lambda function
   1. Skip the pre defined functions step
   2. Set the name to 'DynamoDBLambdaAutoscale'
-  3. Set the runtime to 'Node.js 4.3'
+  3. Set the runtime to 'Node.js 6.x'
   4. Select upload a zip file and select 'dist.zip' which you created earlier
   5. Set the handler to 'index.handler'
   6. Set the Role to 'DynamoDBLambdaAutoscale'
@@ -117,7 +179,12 @@ A breakdown of the configuration behaviour is as follows:
 ## Strategy Settings
 
 The strategy settings described above uses a simple schema which applies to both Read/Write and to
-both the Increment/Decrement.  Using the options below many different strategies can be constructed:
+both the Increment/Decrement.  For an Increment, if more than one option is 
+specified, the maximum of the specified options is used.  For a Decrement, the
+minimum of the specified options is used.  The Increment/Decrement is bounded
+by the Max/Min, respectively.  See the example, in the [Configuration](#configuration) 
+section, for a more concrete illustration of how the different options work 
+together.  Using the options below many different strategies can be constructed:
 - ReadCapacity.Min : (Optional) Define a minimum allowed capacity, otherwise 1
 - ReadCapacity.Max : (Optional) Define a maximum allowed capacity, otherwise unlimited
 - ReadCapacity.Increment : (Optional) Defined an increment strategy

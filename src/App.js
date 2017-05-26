@@ -7,6 +7,8 @@ import CapacityCalculator from './CapacityCalculator';
 import { json, stats, log, invariant } from './Global';
 import type { UpdateTableRequest } from 'aws-sdk';
 
+const https = require('https');
+
 export default class App {
   _provisioner: Provisioner;
   _capacityCalculator: CapacityCalculator;
@@ -14,6 +16,25 @@ export default class App {
   constructor() {
     this._provisioner = new Provisioner();
     this._capacityCalculator = new CapacityCalculator();
+    this._checkEnvVariables();
+  }
+
+  // These environment variables are required.
+  _checkEnvVariables() {
+    if(!('VPC_DOMAIN' in process.env)) {
+      log('Error: VPC_DOMAIN environment variable not set.');
+      throw(new Error('VPC_DOMAIN environment variable not set.'));
+    }
+
+    if(!('SLACK_WEBHOOK_HOST' in process.env)) {
+      log('Error: SLACK_WEBHOOK_HOST environment variable not set.');
+      throw(new Error('SLACK_WEBHOOK_HOST environment variable not set.'));
+    }
+
+    if(!('SLACK_WEBHOOK_PATH' in process.env)) {
+      log('Error: SLACK_WEBHOOK_PATH environment variable not set.');
+      throw(new Error('SLACK_WEBHOOK_PATH environment variable not set.'));
+    }
   }
 
   async runAsync(event: any, context: any): Promise<void> {
@@ -45,7 +66,32 @@ export default class App {
     }
 
     sw.end();
-    this._logMetrics(tableDetails);
+
+    let metricStr = this._logMetrics(tableDetails);
+
+    // Send updates to Slack
+    if(tableUpdateRequests.length > 0) {
+      // $FlowIgnore
+      let msg = JSON.stringify({'text': process.env.VPC_DOMAIN + ':\n' + metricStr}, null, json.padding);
+
+      let options = {
+        hostname: process.env.SLACK_WEBHOOK_HOST,
+        port: 443,
+        path: process.env.SLACK_WEBHOOK_PATH,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(msg)
+        }
+      };
+
+      let req = https.request(options, (res) => {});
+      req.on('error', (e) => {
+          log("Error POST'ing to Slack: " + e.message);
+      });
+      req.write(msg);
+      req.end();
+    }
 
     // Return an empty response
     if (context) {
@@ -135,7 +181,7 @@ export default class App {
       .map(({tableUpdateRequest}) => tableUpdateRequest);
   }
 
-  _logMetrics(tableDetails: Object[]) {
+  _logMetrics(tableDetails: Object[]): string {
     invariant(tableDetails instanceof Array,
       'The argument \'tableDetails\' was not an array');
 
@@ -182,7 +228,7 @@ export default class App {
     let tableUpdates = updateRequests != null ? { count: updateRequests.length } :
       undefined;
 
-    log(JSON.stringify({
+    let jsonMsg = JSON.stringify({
       'Index.handler': indexHandler,
       'DynamoDB.listTablesAsync': dynamoDBListTablesAsync,
       'DynamoDB.describeTableAsync': dynamoDBDescribeTableAsync,
@@ -191,6 +237,10 @@ export default class App {
       TableUpdates: tableUpdates,
       TotalProvisionedThroughput: totalProvisionedThroughput,
       TotalMonthlyEstimatedCost: totalMonthlyEstimatedCost,
-    }, null, json.padding));
+    }, null, json.padding);
+
+    log(jsonMsg);
+
+    return jsonMsg;
   }
 }
