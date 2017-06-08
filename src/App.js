@@ -35,6 +35,10 @@ export default class App {
       log('Error: SLACK_WEBHOOK_PATH environment variable not set.');
       throw(new Error('SLACK_WEBHOOK_PATH environment variable not set.'));
     }
+
+    if('DEV_STACK' in process.env) {
+      log('DEV_STACK env variable set.  Using non-production autoscale parameters.');
+    } 
   }
 
   async runAsync(event: any, context: any): Promise<void> {
