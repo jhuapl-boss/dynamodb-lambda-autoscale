@@ -22,7 +22,7 @@
               "UtilisationIsBelowPercent": 30,
               "AfterLastIncrementMinutes": 60,
               "AfterLastDecrementMinutes": 60,
-              "UnitAdjustmentGreaterThan": 5
+              "UnitAdjustmentGreaterThan": 2
             },
             "To": {
               "ConsumedPercent": 100
@@ -51,7 +51,7 @@
               "UtilisationIsBelowPercent": 30,
               "AfterLastIncrementMinutes": 60,
               "AfterLastDecrementMinutes": 60,
-              "UnitAdjustmentGreaterThan": 5
+              "UnitAdjustmentGreaterThan": 2
             },
             "To": {
               "ConsumedPercent": 100
