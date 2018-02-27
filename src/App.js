@@ -38,7 +38,7 @@ export default class App {
 
     if('DEV_STACK' in process.env) {
       log('DEV_STACK env variable set.  Using non-production autoscale parameters.');
-    } 
+    }
   }
 
   async runAsync(event: any, context: any): Promise<void> {
@@ -229,8 +229,13 @@ export default class App {
         { mean: stJSON['CloudWatch.getMetricStatisticsAsync'].histogram.mean } :
         undefined;
 
-    let tableUpdates = updateRequests != null ? { count: updateRequests.length } :
-      undefined;
+    let tableUpdates =
+      updateRequests != null ?
+        {
+          count: updateRequests.length,
+          names: updateRequests.map(x => x.TableName)
+        } :
+        undefined;
 
     let jsonMsg = JSON.stringify({
       'Index.handler': indexHandler,
