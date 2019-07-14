@@ -61,8 +61,8 @@ gulp.task('zip', function() {
 // See http://aws.amazon.com/sdk-for-node-js/
 gulp.task('upload', function() {
 
-  // TODO: This should probably pull from package.json
-  AWS.config.region = 'us-east-1';
+  // NOTE: The environmental variables AWS_PROFILE and AWS_REGION should be defined
+
   var lambda = new AWS.Lambda();
   var functionName = 'video-events';
 
