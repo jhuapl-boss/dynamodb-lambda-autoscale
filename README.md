@@ -146,7 +146,7 @@ configuration.  Please see the respective websites for advantages / reasons.
 3. Create a AWS Lambda function
   1. Skip the pre defined functions step
   2. Set the name to 'DynamoDBLambdaAutoscale'
-  3. Set the runtime to 'Node.js 6.x'
+  3. Set the runtime to 'Node.js 10.x'
   4. Select upload a zip file and select 'dist.zip' which you created earlier
   5. Set the handler to 'index.handler'
   6. Set the Role to 'DynamoDBLambdaAutoscale'
