@@ -56,8 +56,6 @@ export default class Provisioner extends ProvisionerConfigurableBase {
   // Gets the json settings which control how the specifed table will be autoscaled
   // eslint-disable-next-line no-unused-vars
   getTableConfig(data: TableProvisionedAndConsumedThroughput): ProvisionerConfig {
-    let devStack = 'DEV_STACK' in process.env;
-
     // Option 1 - Default settings for all tables
     // return DefaultProvisioner;
 
@@ -65,13 +63,13 @@ export default class Provisioner extends ProvisionerConfigurableBase {
     // return data.TableName === 'Table1' ? Climbing : Default;
     if(this._bossTableConfig.hasOwnProperty(data.TableName)) {
       let config = this._bossTableConfig[data.TableName];
-      if(devStack) {
-        // Override configuration when running a developer's stack.
-        config = 'default';
-      }
       if(!provisionerMap.hasOwnProperty(config)) {
-        log('WARNING: table: ' + data.TableName + ' specified unknown config: ' + config);
-        return FixedProvisioner;
+        if(provisionerMap.hasOwnProperty('default')) {
+            config = 'default';
+        } else {
+            log('WARNING: table: ' + data.TableName + ' specified unknown config: ' + config);
+            return FixedProvisioner;
+        }
       }
       return provisionerMap[config];
     }

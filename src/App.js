@@ -26,18 +26,13 @@ export default class App {
       throw(new Error('VPC_DOMAIN environment variable not set.'));
     }
 
-    if(!('SLACK_WEBHOOK_HOST' in process.env)) {
-      log('Error: SLACK_WEBHOOK_HOST environment variable not set.');
-      throw(new Error('SLACK_WEBHOOK_HOST environment variable not set.'));
-    }
-
     if(!('SLACK_WEBHOOK_PATH' in process.env)) {
-      log('Error: SLACK_WEBHOOK_PATH environment variable not set.');
-      throw(new Error('SLACK_WEBHOOK_PATH environment variable not set.'));
-    }
-
-    if('DEV_STACK' in process.env) {
-      log('DEV_STACK env variable set.  Using non-production autoscale parameters.');
+      log('SLACK_WEBHOOK_PATH environment variable not defined, not using Slack notifications');
+    } else {
+        if(!('SLACK_WEBHOOK_HOST' in process.env)) {
+          log('Error: SLACK_WEBHOOK_HOST environment variable not set.');
+          throw(new Error('SLACK_WEBHOOK_HOST environment variable not set.'));
+        }
     }
   }
 
@@ -73,28 +68,30 @@ export default class App {
 
     let metricStr = this._logMetrics(tableDetails);
 
-    // Send updates to Slack
-    if(tableUpdateRequests.length > 0) {
-      // $FlowIgnore
-      let msg = JSON.stringify({'text': process.env.VPC_DOMAIN + ':\n' + metricStr}, null, json.padding);
+    if ('SLACK_WEBHOOK_PATH' in process.env) {
+        // Send updates to Slack
+        if(tableUpdateRequests.length > 0) {
+          // $FlowIgnore
+          let msg = JSON.stringify({'text': process.env.VPC_DOMAIN + ':\n' + metricStr}, null, json.padding);
 
-      let options = {
-        hostname: process.env.SLACK_WEBHOOK_HOST,
-        port: 443,
-        path: process.env.SLACK_WEBHOOK_PATH,
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(msg)
+          let options = {
+            hostname: process.env.SLACK_WEBHOOK_HOST,
+            port: 443,
+            path: process.env.SLACK_WEBHOOK_PATH,
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Content-Length': Buffer.byteLength(msg)
+            }
+          };
+
+          let req = https.request(options, (res) => {});
+          req.on('error', (e) => {
+              log("Error POST'ing to Slack: " + e.message);
+          });
+          req.write(msg);
+          req.end();
         }
-      };
-
-      let req = https.request(options, (res) => {});
-      req.on('error', (e) => {
-          log("Error POST'ing to Slack: " + e.message);
-      });
-      req.write(msg);
-      req.end();
     }
 
     // Return an empty response

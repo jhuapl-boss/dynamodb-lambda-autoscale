@@ -36,3 +36,5 @@ dist/
 dist.zip
 build/
 config.env.production
+src/configuration/BossTableConfig.json
+src/configuration/BossProvisioners.json
